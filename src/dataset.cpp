@@ -64,6 +64,7 @@ DataEntry::DataEntry(const std::string &entry) {
     idx++;
     wdl = entry[idx] == '1' ? 1 : (entry[idx + 2] == '5' ? float(0.5) : 0);
     eval = sigmoid(float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4))));
+    expected = EVAL_INFLUENCE * eval + (1 - EVAL_INFLUENCE) * wdl;
 }
 
 Dataset::Dataset(const std::string &fileName) {

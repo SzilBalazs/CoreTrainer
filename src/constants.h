@@ -9,6 +9,8 @@ constexpr unsigned int BATCH_SIZE = 8192;
 constexpr float EVAL_INFLUENCE = 0.5;
 constexpr unsigned int EPOCHS = 500;
 
+constexpr int ITERATIONS_PER_CHECKPOINT = 50;
+
 constexpr int EVAL_SCALE = 400;
 constexpr float EVAL_SCALE_INVERSE = 1.0 / EVAL_SCALE;
 
@@ -46,12 +48,12 @@ constexpr float sigmoidDerivative(float in) {
     return in * (1 - in) * EVAL_SCALE_INVERSE;
 }
 
-constexpr float error(float output, float wdl, float eval) {
-    return (output - eval) * (output - eval);
+constexpr float error(float output, float expected) {
+    return (output - expected) * (output - expected);
 }
 
-constexpr float errorDerivative(float output, float wdl, float eval) {
-    return 2 * (output - eval);
+constexpr float errorDerivative(float output, float expected) {
+    return 2 * (output - expected);
 }
 
 #endif //CORETRAINER_SRC_CONSTANTS_H_

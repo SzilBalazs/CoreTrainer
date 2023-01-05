@@ -1,6 +1,7 @@
 #include "train.h"
 #include "dataset.h"
 
+#include <chrono>
 #include <iostream>
 
 DataEntry entries[BATCH_SIZE];
@@ -13,6 +14,7 @@ void train(const std::string &networkName, const std::string &trainPath, const s
 
     unsigned int iteration = 0;
     float totalError = 0;
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     for (unsigned int epoch = 1; epoch < EPOCHS; epoch++) {
 
         bool newEpoch = false;
@@ -34,9 +36,9 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                 float hiddenLayer[L_1_SIZE];
 
                 float output = sigmoid(model.forward(entry, hiddenLayer));
-                e += error(output, entry.wdl, entry.eval);
+                e += error(output, entry.expected);
 
-                float lossOutput = sigmoidDerivative(output) * errorDerivative(output, entry.wdl, entry.eval);
+                float lossOutput = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
                 float lossHiddenLayer[L_1_SIZE];
 
                 for (int idx = 0; idx < L_1_SIZE; idx++) {
@@ -72,8 +74,12 @@ void train(const std::string &networkName, const std::string &trainPath, const s
 
             totalError += e;
 
-            if (iteration % 100 == 0) {
-                std::cout << iteration << ": " << (totalError / 100 / BATCH_SIZE) << std::endl;
+            if (iteration % ITERATIONS_PER_CHECKPOINT == 0) {
+                float averageError = totalError / ITERATIONS_PER_CHECKPOINT / BATCH_SIZE;
+                std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+                long secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now - begin).count();
+                long positionsPerSecond = iteration * BATCH_SIZE / secondsSinceEpoch;
+                std::cout << "Epoch " << epoch << " - Iteration " << iteration << " - Error " << averageError << " - Elapsed time " << secondsSinceEpoch << "s - Position/second " << positionsPerSecond << "\r" << std::flush;
                 totalError = 0;
             }
             // Forward DONE
@@ -82,7 +88,7 @@ void train(const std::string &networkName, const std::string &trainPath, const s
         }
 
         system("mkdir nets");
-        std::cout << "Epoch " << epoch << " has finished!" << std::endl;
+        std::cout << "\nEpoch " << epoch << " has finished!" << std::endl;
         FILE *f;
         f = fopen(("nets/" + networkName + "_" + std::to_string(epoch) + ".bin").c_str(), "wb");
         model.writeToFile(f);
