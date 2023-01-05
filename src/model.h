@@ -7,7 +7,7 @@
 
 struct Model {
     LinearLayer<L_0_SIZE, L_1_SIZE> L_0;
-    LinearLayer<L_1_SIZE * 2, L_2_SIZE> L_1;
+    LinearLayer<L_1_SIZE, L_2_SIZE> L_1;
 
     inline Model() : L_0(), L_1() {}
 
@@ -24,21 +24,15 @@ struct Model {
     inline float forward(DataEntry &input, float *hiddenLayer) {
         float output;
 
-        if (input.stm == WHITE) {
-            L_0.forward(input.whiteFeatureIndexes, hiddenLayer);
-            L_0.forward(input.blackFeatureIndexes, hiddenLayer + L_1_SIZE);
-        } else {
-            L_0.forward(input.whiteFeatureIndexes, hiddenLayer + L_1_SIZE);
-            L_0.forward(input.blackFeatureIndexes, hiddenLayer);
-        }
+        L_0.forward(input.whiteFeatureIndexes, hiddenLayer);
 
-        for (unsigned int idx = 0; idx < L_1_SIZE * 2; idx++) {
-            hiddenLayer[idx] = clippedReLU(hiddenLayer[idx]);
+        for (unsigned int idx = 0; idx < L_1_SIZE; idx++) {
+            hiddenLayer[idx] = ReLU(hiddenLayer[idx]);
         }
 
         L_1.forward(hiddenLayer, &output);
 
-        return sigmoid(output);
+        return output;
     }
 };
 

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <complex>
 
-constexpr float LR = 0.005;
+constexpr float LR = 0.0005;
 constexpr unsigned int BATCH_SIZE = 8192;
 constexpr float EVAL_INFLUENCE = 0.5;
 constexpr unsigned int EPOCHS = 500;
@@ -30,12 +30,12 @@ enum PieceType {
     QUEEN = 5
 };
 
-constexpr float clippedReLU(float in) {
-    return std::clamp(in, float(0), float(1));
+constexpr float ReLU(float in) {
+    return std::max(in, float(0));
 }
 
-constexpr float clippedReLUDerivative(float in) {
-    return 0 < in && in < 1.0;
+constexpr float ReLUDerivative(float in) {
+    return 0 < in;
 }
 
 constexpr float sigmoid(float in) {
@@ -47,13 +47,11 @@ constexpr float sigmoidDerivative(float in) {
 }
 
 constexpr float error(float output, float wdl, float eval) {
-    return EVAL_INFLUENCE * (output - eval) * (output - eval) +
-           (1 - EVAL_INFLUENCE) * (output - wdl) * (output - wdl);
+    return (output - eval) * (output - eval);
 }
 
 constexpr float errorDerivative(float output, float wdl, float eval) {
-    return EVAL_INFLUENCE * 2 * (output - eval) +
-           (1 - EVAL_INFLUENCE) * 2 * (output - wdl);
+    return 2 * (output - eval);
 }
 
 #endif //CORETRAINER_SRC_CONSTANTS_H_
