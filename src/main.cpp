@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Network name: " << networkName << "\nTraining data: " << trainPath
               << "\nValidation data: " << validationPath << "\nBatch size: " << BATCH_SIZE
-              << "\nLearning rate: " << LR << "\nEval influence: " << EVAL_INFLUENCE << "\n";
+              << "\nLearning rate: " << LR << "\nEval influence: " << EVAL_INFLUENCE
+              << "\nThreads: " << THREAD_COUNT << std::endl;
 
     train(networkName, trainPath, validationPath, NNUE);
     return 0;

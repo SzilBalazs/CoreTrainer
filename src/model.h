@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "dataset.h"
+#include "gradient.h"
 #include "layer.h"
 
 struct Model {
@@ -33,6 +34,19 @@ struct Model {
         L_1.forward(hiddenLayer, &output);
 
         return output;
+    }
+
+    inline void apply(const Gradient &gradient) {
+        L_1.biases[0] -= gradient.L_1_BIAS_GRADIENT * LR;
+        for (unsigned int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
+            L_1.weights[i] -= gradient.L_1_WEIGHT_GRADIENT[i] * LR;
+        }
+        for (unsigned int i = 0; i < L_1_SIZE; i++) {
+            L_0.biases[i] -= gradient.L_0_BIAS_GRADIENT[i] * LR;
+        }
+        for (unsigned int i = 0; i < L_0_SIZE * L_1_SIZE; i++) {
+            L_0.weights[i] -= gradient.L_0_WEIGHT_GRADIENT[i] * LR;
+        }
     }
 };
 

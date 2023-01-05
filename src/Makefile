@@ -4,7 +4,7 @@ OBJECT_DIR = objects
 SOURCES := $(wildcard *.cpp)
 OBJECTS := $(patsubst %.cpp, $(OBJECT_DIR)/%.o, $(SOURCES))
 
-CXXFLAGS = -std=c++20 -O3 -flto -pthread -Wall -march=native
+CXXFLAGS = -std=c++20 -O3 -funroll-loops -flto -pthread -Wall -Wno-unused-result -march=native
 EXE = CoreTrainer
 
 default: $(EXE)

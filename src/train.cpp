@@ -1,10 +1,54 @@
 #include "train.h"
 #include "dataset.h"
+#include "gradient.h"
 
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 DataEntry entries[BATCH_SIZE];
+std::vector<Gradient> gradients(THREAD_COUNT);
+std::vector<std::thread> ths(THREAD_COUNT);
+float errors[THREAD_COUNT];
+
+void processBatch(Model &model, int threadId) {
+
+    Gradient &grad = gradients[threadId];
+
+    grad.reset();
+    alignas(64) float hiddenLayer[L_1_SIZE];
+    alignas(64) float hiddenLayerLoss[L_1_SIZE];
+    errors[threadId] = 0;
+
+    for (unsigned int batchIdx = threadId; batchIdx < BATCH_SIZE; batchIdx += THREAD_COUNT) {
+
+        DataEntry &entry = entries[batchIdx];
+
+        float output = sigmoid(model.forward(entry, hiddenLayer));
+        errors[threadId] += error(output, entry.expected);
+
+        float outputLoss = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
+
+        for (unsigned int idx = 0; idx < L_1_SIZE; idx++) {
+            hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * ReLUDerivative(hiddenLayer[idx]);
+        }
+
+        grad.L_1_BIAS_GRADIENT += outputLoss;
+        for (unsigned int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
+            grad.L_1_WEIGHT_GRADIENT[i] += hiddenLayer[i] * outputLoss;
+        }
+
+        for (unsigned int i = 0; i < L_1_SIZE; i++) {
+            grad.L_0_BIAS_GRADIENT[i] += hiddenLayerLoss[i];
+        }
+
+        for (unsigned int idx : entry.whiteFeatureIndexes) {
+            for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
+            }
+        }
+    }
+}
 
 void train(const std::string &networkName, const std::string &trainPath, const std::string &validationPath, Model &model) {
 
@@ -22,72 +66,31 @@ void train(const std::string &networkName, const std::string &trainPath, const s
             iteration++;
             newEpoch = trainingData.readEntries(entries);
 
-            float e = 0;
-            float L_1_BIAS_GRADIENT = 0;
-            float L_1_WEIGHT_GRADIENT[L_1_SIZE] = {0};
-
-            float L_0_BIAS_GRADIENT[L_1_SIZE] = {0};
-            float L_0_WEIGHT_GRADIENT[L_0_SIZE * L_1_SIZE] = {0};
-
-            for (unsigned int batchIdx = 0; batchIdx < BATCH_SIZE; batchIdx++) {
-
-                DataEntry &entry = entries[batchIdx];
-
-                float hiddenLayer[L_1_SIZE];
-
-                float output = sigmoid(model.forward(entry, hiddenLayer));
-                e += error(output, entry.expected);
-
-                float lossOutput = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
-                float lossHiddenLayer[L_1_SIZE];
-
-                for (int idx = 0; idx < L_1_SIZE; idx++) {
-                    lossHiddenLayer[idx] = lossOutput * model.L_1.getWeight(idx, 0) * ReLUDerivative(hiddenLayer[idx]);
-                }
-
-                L_1_BIAS_GRADIENT += lossOutput;
-                for (int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
-                    L_1_WEIGHT_GRADIENT[i] += hiddenLayer[i] * lossOutput;
-                }
-
-                for (int i = 0; i < L_1_SIZE; i++) {
-                    L_0_BIAS_GRADIENT[i] += lossHiddenLayer[i];
-                }
-
-                for (unsigned int idx : entry.whiteFeatureIndexes) {
-                    for (int i = 0; i < L_1_SIZE; i++) {
-                        L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += lossHiddenLayer[i];
-                    }
-                }
+            for (int id = 0; id < THREAD_COUNT; id++) {
+                ths[id] = std::thread(processBatch, std::ref(model), id);
             }
 
-            model.L_1.biases[0] -= L_1_BIAS_GRADIENT * LR;
-            for (int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
-                model.L_1.weights[i] -= L_1_WEIGHT_GRADIENT[i] * LR;
-            }
-            for (int i = 0; i < L_1_SIZE; i++) {
-                model.L_0.biases[i] -= L_0_BIAS_GRADIENT[i] * LR;
-            }
-            for (int i = 0; i < L_0_SIZE * L_1_SIZE; i++) {
-                model.L_0.weights[i] -= L_0_WEIGHT_GRADIENT[i] * LR;
+            for (int id = 0; id < THREAD_COUNT; id++) {
+                if (ths[id].joinable())
+                    ths[id].join();
             }
 
-            totalError += e;
+            for (int id = 0; id < THREAD_COUNT; id++) {
+                model.apply(gradients[id]);
+                totalError += errors[id];
+            }
 
             if (iteration % ITERATIONS_PER_CHECKPOINT == 0) {
                 float averageError = totalError / ITERATIONS_PER_CHECKPOINT / BATCH_SIZE;
                 std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
                 long secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now - begin).count();
-                long positionsPerSecond = iteration * BATCH_SIZE / secondsSinceEpoch;
+                long positionsPerSecond = iteration * BATCH_SIZE / (secondsSinceEpoch + 1);
                 std::cout << "Epoch " << epoch << " - Iteration " << iteration << " - Error " << averageError << " - Elapsed time " << secondsSinceEpoch << "s - Position/second " << positionsPerSecond << "\r" << std::flush;
                 totalError = 0;
             }
-            // Forward DONE
-            // Loss DONE
-            // Backwards gradient DONE
         }
 
-        system("mkdir nets");
+        system("mkdir nets > /dev/null");
         std::cout << "\nEpoch " << epoch << " has finished!" << std::endl;
         FILE *f;
         f = fopen(("nets/" + networkName + "_" + std::to_string(epoch) + ".bin").c_str(), "wb");

@@ -5,11 +5,13 @@
 #include <complex>
 
 constexpr float LR = 0.0005;
-constexpr unsigned int BATCH_SIZE = 8192;
-constexpr float EVAL_INFLUENCE = 0.5;
+constexpr unsigned int BATCH_SIZE = 16384;
+constexpr float EVAL_INFLUENCE = 0.9;
 constexpr unsigned int EPOCHS = 500;
 
 constexpr int ITERATIONS_PER_CHECKPOINT = 50;
+
+constexpr int THREAD_COUNT = 4;
 
 constexpr int EVAL_SCALE = 400;
 constexpr float EVAL_SCALE_INVERSE = 1.0 / EVAL_SCALE;
