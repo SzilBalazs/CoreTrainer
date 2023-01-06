@@ -13,10 +13,7 @@ struct LinearLayer {
     LinearLayer() {
         std::random_device rd;
         std::mt19937 rng(rd());
-        std::uniform_real_distribution<float> dist(-1.98, 1.98);
-        for (unsigned int idx = 0; idx < OUT; idx++) {
-            biases[idx] = dist(rng);
-        }
+        std::uniform_real_distribution<float> dist(0, 0.1);
         for (unsigned int idx = 0; idx < IN * OUT; idx++) {
             weights[idx] = dist(rng);
         }

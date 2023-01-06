@@ -31,7 +31,7 @@ struct Adam {
 
         applyGradient(model.L_1.biases[0], mGradient.L_1_BIAS_GRADIENT, vGradient.L_1_BIAS_GRADIENT, totalGrad);
 
-        for (unsigned int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
+        for (unsigned int i = 0; i < 2 * L_1_SIZE * L_2_SIZE; i++) {
             totalGrad = 0;
             for (const Gradient &grad : gradients) {
                 totalGrad += grad.L_1_WEIGHT_GRADIENT[i];

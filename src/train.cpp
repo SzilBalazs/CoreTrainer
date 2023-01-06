@@ -20,8 +20,8 @@ void processBatch(Model &model, int threadId) {
     Gradient &grad = gradients[threadId];
 
     grad.reset();
-    alignas(64) float hiddenLayer[L_1_SIZE];
-    alignas(64) float hiddenLayerLoss[L_1_SIZE];
+    alignas(64) float hiddenLayer[2 * L_1_SIZE];
+    alignas(64) float hiddenLayerLoss[2 * L_1_SIZE];
     errors[threadId] = 0;
 
     for (unsigned int batchIdx = threadId; batchIdx < BATCH_SIZE; batchIdx += THREAD_COUNT) {
@@ -33,30 +33,46 @@ void processBatch(Model &model, int threadId) {
 
         float outputLoss = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
 
-        for (unsigned int idx = 0; idx < L_1_SIZE; idx++) {
+        for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
             hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * ReLUDerivative(hiddenLayer[idx]);
         }
 
         grad.L_1_BIAS_GRADIENT += outputLoss;
-        for (unsigned int i = 0; i < L_1_SIZE * L_2_SIZE; i++) {
+
+        for (unsigned int i = 0; i < 2 * L_1_SIZE * L_2_SIZE; i++) {
             grad.L_1_WEIGHT_GRADIENT[i] += hiddenLayer[i] * outputLoss;
         }
 
         for (unsigned int i = 0; i < L_1_SIZE; i++) {
             grad.L_0_BIAS_GRADIENT[i] += hiddenLayerLoss[i];
+            grad.L_0_BIAS_GRADIENT[i] += hiddenLayerLoss[i + L_1_SIZE];
         }
 
-        for (unsigned int idx : entry.whiteFeatureIndexes) {
-            for (unsigned int i = 0; i < L_1_SIZE; i++) {
-                grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
+        if (entry.stm == WHITE) {
+            for (unsigned int idx : entry.whiteFeatureIndexes) {
+                for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                    grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
+                }
+            }
+
+            for (unsigned int idx : entry.blackFeatureIndexes) {
+                for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                    grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i + L_1_SIZE];
+                }
+            }
+        } else {
+            for (unsigned int idx : entry.blackFeatureIndexes) {
+                for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                    grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
+                }
+            }
+
+            for (unsigned int idx : entry.whiteFeatureIndexes) {
+                for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                    grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i + L_1_SIZE];
+                }
             }
         }
-
-        /*for (unsigned int idx : entry.blackFeatureIndexes) {
-            for (unsigned int i = 0; i < L_1_SIZE; i++) {
-                grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
-            }
-        }*/
     }
 }
 

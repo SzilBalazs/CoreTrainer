@@ -68,7 +68,7 @@ DataEntry::DataEntry(const std::string &entry) {
     eval = sigmoid(recordedEval);
 
     expected = EVAL_INFLUENCE * eval + (1 - EVAL_INFLUENCE) * wdl;
-    // if (stm == BLACK) expected = 1.0f - expected;
+    if (stm == BLACK) expected = 1.0f - expected;
 }
 
 Dataset::Dataset(const std::string &fileName) {

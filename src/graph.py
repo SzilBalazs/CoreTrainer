@@ -6,7 +6,7 @@ y_axis = []
 for line in f.readlines():
     data = line.split(" ")
     x_axis.append(float(data[0]))
-    y_axis.append(1-float(data[1]))
+    y_axis.append(float(data[1]))
 
 fig, ax = plt.subplots()
 ax.plot(x_axis, y_axis)

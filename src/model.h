@@ -8,7 +8,7 @@
 
 struct Model {
     LinearLayer<L_0_SIZE, L_1_SIZE> L_0;
-    LinearLayer<L_1_SIZE, L_2_SIZE> L_1;
+    LinearLayer<2 * L_1_SIZE, L_2_SIZE> L_1;
 
     inline Model() : L_0(), L_1() {}
 
@@ -25,22 +25,19 @@ struct Model {
     inline float forward(DataEntry &input, float *hiddenLayer) {
         float output;
 
-        L_0.forward(input.whiteFeatureIndexes, hiddenLayer);
-
-        /*if (input.stm == WHITE) {
+        if (input.stm == WHITE) {
             L_0.forward(input.whiteFeatureIndexes, hiddenLayer);
             L_0.forward(input.blackFeatureIndexes, hiddenLayer + L_1_SIZE);
         } else {
-            L_0.forward(input.whiteFeatureIndexes, hiddenLayer + L_1_SIZE);
             L_0.forward(input.blackFeatureIndexes, hiddenLayer);
-        }*/
+            L_0.forward(input.whiteFeatureIndexes, hiddenLayer + L_1_SIZE);
+        }
 
-        for (unsigned int idx = 0; idx < L_1_SIZE; idx++) {
+        for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
             hiddenLayer[idx] = ReLU(hiddenLayer[idx]);
         }
 
         L_1.forward(hiddenLayer, &output);
-
         return output;
     }
 };
