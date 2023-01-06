@@ -9,7 +9,7 @@ struct Gradient {
     alignas(64) float L_0_WEIGHT_GRADIENT[L_0_SIZE * L_1_SIZE] = {0};
 
     alignas(64) float L_1_BIAS_GRADIENT = 0;
-    alignas(64) float L_1_WEIGHT_GRADIENT[L_1_SIZE] = {0};
+    alignas(64) float L_1_WEIGHT_GRADIENT[L_1_SIZE * L_2_SIZE] = {0};
 
     inline void reset() {
         L_1_BIAS_GRADIENT = 0;

@@ -4,17 +4,20 @@
 #include <algorithm>
 #include <complex>
 
-constexpr float LR = 0.0005;
+extern float LR;
 constexpr unsigned int BATCH_SIZE = 16384;
 constexpr float EVAL_INFLUENCE = 0.9;
 constexpr unsigned int EPOCHS = 500;
 
-constexpr int ITERATIONS_PER_CHECKPOINT = 50;
+constexpr float BETA1 = 0.9;
+constexpr float BETA2 = 0.999;
+constexpr float EPSILON = 1e-8;
+
+constexpr int ITERATIONS_PER_CHECKPOINT = 200;
 
 constexpr int THREAD_COUNT = 4;
 
-constexpr int EVAL_SCALE = 400;
-constexpr float EVAL_SCALE_INVERSE = 1.0 / EVAL_SCALE;
+constexpr float EVAL_SCALE = 400;
 
 constexpr unsigned int L_0_SIZE = 2 * 6 * 64;
 constexpr unsigned int L_1_SIZE = 256;
@@ -43,11 +46,12 @@ constexpr float ReLUDerivative(float in) {
 }
 
 constexpr float sigmoid(float in) {
-    return 1.0 / (1.0 + std::exp(-in * EVAL_SCALE_INVERSE));
+    return 1.0f / (1.0f + std::exp(-in));
 }
 
 constexpr float sigmoidDerivative(float in) {
-    return in * (1 - in) * EVAL_SCALE_INVERSE;
+    float x = sigmoid(in);
+    return x * (1 - x);
 }
 
 constexpr float error(float output, float expected) {

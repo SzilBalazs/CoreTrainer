@@ -57,14 +57,18 @@ DataEntry::DataEntry(const std::string &entry) {
                 sq++;
             }
         } else if (entry[idx] == 'w')
-            stm = false;
+            stm = WHITE;
         idx++;
     }
 
     idx++;
-    wdl = entry[idx] == '1' ? 1 : (entry[idx + 2] == '5' ? float(0.5) : 0);
-    eval = sigmoid(float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4))));
+    float recordedEval = float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4))) / EVAL_SCALE;
+
+    wdl = entry[idx] == '1' ? 1 : (entry[idx + 2] == '5' ? 0.5f : 0.0f);
+    eval = sigmoid(recordedEval);
+
     expected = EVAL_INFLUENCE * eval + (1 - EVAL_INFLUENCE) * wdl;
+    // if (stm == BLACK) expected = 1.0f - expected;
 }
 
 Dataset::Dataset(const std::string &fileName) {

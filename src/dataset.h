@@ -16,7 +16,7 @@ struct DataEntry {
     float wdl;
     float eval;
     float expected;
-    bool stm = true; // false=WHITE true=BLACK
+    bool stm = BLACK;
 
     DataEntry() {}
 

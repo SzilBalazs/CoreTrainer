@@ -11,7 +11,8 @@ struct LinearLayer {
     alignas(64) float weights[IN * OUT] = {0};
 
     LinearLayer() {
-        std::mt19937 rng;
+        std::random_device rd;
+        std::mt19937 rng(rd());
         std::uniform_real_distribution<float> dist(-1.98, 1.98);
         for (unsigned int idx = 0; idx < OUT; idx++) {
             biases[idx] = dist(rng);

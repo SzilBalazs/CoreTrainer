@@ -1,10 +1,14 @@
 #include "train.h"
+#include "adam.h"
 #include "dataset.h"
 #include "gradient.h"
 
 #include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <thread>
+
+float LR = 0.001;
 
 DataEntry entries[BATCH_SIZE];
 std::vector<Gradient> gradients(THREAD_COUNT);
@@ -47,6 +51,12 @@ void processBatch(Model &model, int threadId) {
                 grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
             }
         }
+
+        /*for (unsigned int idx : entry.blackFeatureIndexes) {
+            for (unsigned int i = 0; i < L_1_SIZE; i++) {
+                grad.L_0_WEIGHT_GRADIENT[idx * L_1_SIZE + i] += hiddenLayerLoss[i];
+            }
+        }*/
     }
 }
 
@@ -54,7 +64,17 @@ void train(const std::string &networkName, const std::string &trainPath, const s
 
     Dataset trainingData = Dataset(trainPath);
 
+    if (!std::filesystem::exists("nets/")) {
+        std::filesystem::create_directory("nets/");
+    }
+
+    if (std::filesystem::exists("loss.txt")) {
+        std::filesystem::remove("loss.txt");
+    }
+
     std::cout << "\nStarted training " << networkName << "!" << std::endl;
+
+    Adam adam = Adam();
 
     unsigned int iteration = 0;
     float totalError = 0;
@@ -75,8 +95,9 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                     ths[id].join();
             }
 
+            adam.applyGradients(gradients, model);
+
             for (int id = 0; id < THREAD_COUNT; id++) {
-                model.apply(gradients[id]);
                 totalError += errors[id];
             }
 
@@ -85,12 +106,20 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                 std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
                 long secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now - begin).count();
                 long positionsPerSecond = iteration * BATCH_SIZE / (secondsSinceEpoch + 1);
+                std::cout << "                                               \r" << std::flush;
                 std::cout << "Epoch " << epoch << " - Iteration " << iteration << " - Error " << averageError << " - Elapsed time " << secondsSinceEpoch << "s - Position/second " << positionsPerSecond << "\r" << std::flush;
                 totalError = 0;
+
+                std::ofstream data("loss.txt", std::ios::app);
+                data << iteration << " " << averageError << "\n";
+                data.close();
+                system("python3 graph.py &");
             }
         }
 
-        system("mkdir nets > /dev/null");
+        if (epoch == 30) {
+            LR /= 10;
+        }
         std::cout << "\nEpoch " << epoch << " has finished!" << std::endl;
         FILE *f;
         f = fopen(("nets/" + networkName + "_" + std::to_string(epoch) + ".bin").c_str(), "wb");
