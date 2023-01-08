@@ -18,6 +18,8 @@ constexpr int ITERATIONS_PER_CHECKPOINT = 200;
 constexpr int THREAD_COUNT = 4;
 
 constexpr float EVAL_SCALE = 400;
+constexpr float EVAL_SCALE_INVERSE = 1 / EVAL_SCALE;
+constexpr float QUANT_SCALE = 64;
 
 constexpr unsigned int L_0_SIZE = 2 * 6 * 64;
 constexpr unsigned int L_1_SIZE = 256;
@@ -38,20 +40,28 @@ enum PieceType {
 };
 
 constexpr float ReLU(float in) {
-    return std::max(in, float(0));
+    return std::max(in, 0.0f);
 }
 
 constexpr float ReLUDerivative(float in) {
     return 0 < in;
 }
 
+constexpr float clippedReLU(float in) {
+    return std::clamp(in, 0.0f, 64.0f);
+}
+
+constexpr float clippedReLUDerivative(float in) {
+    return 0.0f < in && in < 64.0f;
+}
+
 constexpr float sigmoid(float in) {
-    return 1.0f / (1.0f + std::exp(-in));
+    return 1.0f / (1.0f + std::exp(-in * EVAL_SCALE_INVERSE));
 }
 
 constexpr float sigmoidDerivative(float in) {
     float x = sigmoid(in);
-    return x * (1 - x);
+    return x * (1 - x) * EVAL_SCALE_INVERSE;
 }
 
 constexpr float error(float output, float expected) {

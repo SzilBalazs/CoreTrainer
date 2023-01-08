@@ -54,18 +54,22 @@ int main(int argc, char *argv[]) {
 
     if (argc == 2) {
 
-        std::string inFile, outFile;
-        int blockCount, lineCount;
-        std::cout << "Input file path: ";
-        std::cin >> inFile;
-        std::cout << "Output file path: ";
-        std::cin >> outFile;
-        std::cout << "Block count: ";
-        std::cin >> blockCount;
-        std::cout << "Line count: ";
-        std::cin >> lineCount;
+        if (strcmp(argv[1], "shuffle") == 0) {
+            std::string inFile, outFile;
+            int blockCount, lineCount;
+            std::cout << "Input file path: ";
+            std::cin >> inFile;
+            std::cout << "Output file path: ";
+            std::cin >> outFile;
+            std::cout << "Block count: ";
+            std::cin >> blockCount;
+            std::cout << "Line count: ";
+            std::cin >> lineCount;
 
-        shuffle(inFile, outFile, blockCount, lineCount);
+            shuffle(inFile, outFile, blockCount, lineCount);
+        } else {
+            std::cout << "Unknown parameter: " << argv[1] << std::endl;
+        }
 
         return 0;
     }

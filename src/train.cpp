@@ -8,9 +8,10 @@
 #include <iostream>
 #include <thread>
 
-float LR = 0.001;
+float LR = 0.0005;
 
-DataEntry entries[BATCH_SIZE];
+DataEntry *entries;
+DataEntry *nextEntries;
 std::vector<Gradient> gradients(THREAD_COUNT);
 std::vector<std::thread> ths(THREAD_COUNT);
 float errors[THREAD_COUNT];
@@ -34,7 +35,7 @@ void processBatch(Model &model, int threadId) {
         float outputLoss = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
 
         for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
-            hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * ReLUDerivative(hiddenLayer[idx]);
+            hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * clippedReLUDerivative(hiddenLayer[idx]);
         }
 
         grad.L_1_BIAS_GRADIENT += outputLoss;
@@ -84,6 +85,10 @@ void train(const std::string &networkName, const std::string &trainPath, const s
         std::filesystem::create_directory("nets/");
     }
 
+    if (!std::filesystem::exists("export/")) {
+        std::filesystem::create_directory("export/");
+    }
+
     if (std::filesystem::exists("loss.txt")) {
         std::filesystem::remove("loss.txt");
     }
@@ -91,6 +96,11 @@ void train(const std::string &networkName, const std::string &trainPath, const s
     std::cout << "\nStarted training " << networkName << "!" << std::endl;
 
     Adam adam = Adam();
+
+    bool temp;
+    entries = new DataEntry[BATCH_SIZE];
+    nextEntries = new DataEntry[BATCH_SIZE];
+    trainingData.readEntries(nextEntries, temp);
 
     unsigned int iteration = 0;
     float totalError = 0;
@@ -100,7 +110,12 @@ void train(const std::string &networkName, const std::string &trainPath, const s
         bool newEpoch = false;
         while (!newEpoch) {
             iteration++;
-            newEpoch = trainingData.readEntries(entries);
+
+            delete[] entries;
+            entries = nextEntries;
+            nextEntries = new DataEntry[BATCH_SIZE];
+
+            std::thread loadingThread = std::thread(&Dataset::readEntries, &trainingData, nextEntries, std::ref(newEpoch));
 
             for (int id = 0; id < THREAD_COUNT; id++) {
                 ths[id] = std::thread(processBatch, std::ref(model), id);
@@ -131,16 +146,26 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                 data.close();
                 system("python3 graph.py &");
             }
+
+            if (loadingThread.joinable())
+                loadingThread.join();
         }
 
-        if (epoch == 30) {
-            LR /= 10;
-        }
         std::cout << "\nEpoch " << epoch << " has finished!" << std::endl;
+
         FILE *f;
         f = fopen(("nets/" + networkName + "_" + std::to_string(epoch) + ".bin").c_str(), "wb");
         model.writeToFile(f);
         fclose(f);
+
+        FILE *f2 = fopen(("export/" + networkName + "_" + std::to_string(epoch) + ".bin").c_str(), "wb");
+        model.exportToFile(f2);
+        fclose(f2);
+
+        if (epoch == 30) {
+            std::cout << "LR reduced!" << LR << " -> " << LR / 10 << std::endl;
+            LR /= 10;
+        }
     }
 
     trainingData.close();

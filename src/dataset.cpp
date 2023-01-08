@@ -62,7 +62,7 @@ DataEntry::DataEntry(const std::string &entry) {
     }
 
     idx++;
-    float recordedEval = float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4))) / EVAL_SCALE;
+    float recordedEval = float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4)));
 
     wdl = entry[idx] == '1' ? 1 : (entry[idx + 2] == '5' ? 0.5f : 0.0f);
     eval = sigmoid(recordedEval);
@@ -80,8 +80,7 @@ Dataset::Dataset(const std::string &fileName) {
     }
 }
 
-bool Dataset::readEntries(DataEntry *entries) {
-    bool newEpoch = false;
+bool Dataset::readEntries(DataEntry *entries, bool &newEpoch) {
     std::string line;
     for (unsigned int idx = 0; idx < BATCH_SIZE; idx++) {
         if (std::getline(file, line)) {

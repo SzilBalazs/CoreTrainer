@@ -1,6 +1,8 @@
 #ifndef CORETRAINER_SRC_MODEL_H_
 #define CORETRAINER_SRC_MODEL_H_
 
+#include <cmath>
+
 #include "constants.h"
 #include "dataset.h"
 #include "gradient.h"
@@ -22,6 +24,40 @@ struct Model {
         L_1.writeToFile(f);
     }
 
+    inline void exportToFile(FILE *f) {
+
+        float maxWeight0 = 0.0;
+        float maxBias0 = 0.0;
+        float maxWeight1 = 0.0;
+        float maxBias1 = 0.0;
+
+        for (float w : L_0.weights) {
+            maxWeight0 = std::max(maxWeight0, w);
+            int16_t a = std::round(w * QUANT_SCALE);
+            fwrite(&a, sizeof(int16_t), 1, f);
+        }
+
+        for (float w : L_0.biases) {
+            maxBias0 = std::max(maxBias0, w);
+            int16_t a = std::round(w * QUANT_SCALE);
+            fwrite(&a, sizeof(int16_t), 1, f);
+        }
+
+        for (float w : L_1.weights) {
+            maxWeight1 = std::max(maxWeight1, w);
+            int16_t a = std::round(w * QUANT_SCALE);
+            fwrite(&a, sizeof(int16_t), 1, f);
+        }
+
+        for (float w : L_1.biases) {
+            maxBias1 = std::max(maxBias1, w);
+            int16_t a = std::round(w * QUANT_SCALE * QUANT_SCALE);
+            fwrite(&a, sizeof(int16_t), 1, f);
+        }
+
+        std::cout << "Max weight: " << maxWeight0 << " " << maxWeight1 << "\nMax bias: " << maxBias0 << " " << maxBias1 << std::endl;
+    }
+
     inline float forward(DataEntry &input, float *hiddenLayer) {
         float output;
 
@@ -34,7 +70,7 @@ struct Model {
         }
 
         for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
-            hiddenLayer[idx] = ReLU(hiddenLayer[idx]);
+            hiddenLayer[idx] = clippedReLU(hiddenLayer[idx]);
         }
 
         L_1.forward(hiddenLayer, &output);
