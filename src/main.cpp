@@ -43,8 +43,9 @@ void shuffle(const std::string &inPath, const std::string &outPath, int blockCou
     out.close();
 }
 
-int main(int argc, char *argv[]) {
+Model NNUE;
 
+int main(int argc, char *argv[]) {
     if (argc != 2 && argc != 4 && argc != 5) {
         std::cout << "Train a new network: ./CoreTrainer networkName trainingData validationData" << std::endl;
         std::cout << "Load and train an existing network: ./CoreTrainer networkName trainingData validationData networkPath" << std::endl;
@@ -77,8 +78,6 @@ int main(int argc, char *argv[]) {
     std::string networkName(argv[1]);
     std::string trainPath(argv[2]);
     std::string validationPath(argv[3]);
-
-    Model NNUE;
 
     if (argc == 5) {
         std::string networkPath(argv[4]);

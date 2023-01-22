@@ -20,9 +20,24 @@ constexpr int THREAD_COUNT = 4;
 constexpr float EVAL_SCALE = 400;
 constexpr float QUANT_SCALE = 255;
 
-constexpr unsigned int L_0_SIZE = 2 * 6 * 64;
+// king buckets * colors * piece types * squares
+constexpr unsigned int L_0_SIZE = 4 * 2 * 6 * 64;
 constexpr unsigned int L_1_SIZE = 256;
 constexpr unsigned int L_2_SIZE = 1;
+
+// clang-format off
+constexpr int KING_BUCKET[64]{
+        0, 0, 0, 0, 1, 1, 1, 1,
+        0, 0, 0, 0, 1, 1, 1, 1,
+        0, 0, 0, 0, 1, 1, 1, 1,
+        0, 0, 0, 0, 1, 1, 1, 1,
+        2, 2, 2, 2, 3, 3, 3, 3,
+        2, 2, 2, 2, 3, 3, 3, 3,
+        2, 2, 2, 2, 3, 3, 3, 3,
+        2, 2, 2, 2, 3, 3, 3, 3,
+
+};
+// clang-format on
 
 enum Color {
     WHITE = 1,

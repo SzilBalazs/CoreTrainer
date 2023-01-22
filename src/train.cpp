@@ -78,7 +78,6 @@ void processBatch(Model &model, int threadId) {
 }
 
 void train(const std::string &networkName, const std::string &trainPath, const std::string &validationPath, Model &model) {
-
     Dataset trainingData = Dataset(trainPath);
 
     if (!std::filesystem::exists("nets/")) {

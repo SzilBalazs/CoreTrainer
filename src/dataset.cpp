@@ -1,10 +1,11 @@
 #include "dataset.h"
 #include "constants.h"
+#include <cassert>
 
 DataEntry::DataEntry(const std::string &entry) {
     unsigned int sq = 56, idx = 0;
     bool posSegment = true;
-
+    unsigned int wKing = 64, bKing = 64;
     while (entry[idx] != '<' && idx < entry.size()) {
         char c = entry[idx];
 
@@ -19,9 +20,11 @@ DataEntry::DataEntry(const std::string &entry) {
                 switch (c) {
                     case 'K':
                         addFeature(WHITE, KING, sq);
+                        wKing = sq;
                         break;
                     case 'k':
                         addFeature(BLACK, KING, sq);
+                        bKing = sq;
                         break;
                     case 'P':
                         addFeature(WHITE, PAWN, sq);
@@ -60,6 +63,20 @@ DataEntry::DataEntry(const std::string &entry) {
             stm = WHITE;
         idx++;
     }
+    assert(wKing != 64 && bKing != 64);
+
+    // Apply king buckets
+    const unsigned int whiteOffset = KING_BUCKET[wKing] * 768;
+    const unsigned int blackOffset = KING_BUCKET[bKing ^ 56] * 768;
+
+    for (unsigned int &feature : whiteFeatureIndexes) {
+        feature += whiteOffset;
+    }
+
+    for (unsigned int &feature : blackFeatureIndexes) {
+        feature += blackOffset;
+    }
+
     std::string evalStr;
     for (idx++; entry[idx] != '>' && idx < entry.size(); idx++) {
         evalStr += entry[idx];
