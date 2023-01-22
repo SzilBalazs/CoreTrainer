@@ -70,7 +70,7 @@ struct Model {
         }
 
         for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
-            hiddenLayer[idx] = clippedReLU(hiddenLayer[idx]);
+            hiddenLayer[idx] = ReLU(hiddenLayer[idx]);
         }
 
         L_1.forward(hiddenLayer, &output);

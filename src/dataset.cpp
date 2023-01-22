@@ -5,7 +5,7 @@ DataEntry::DataEntry(const std::string &entry) {
     unsigned int sq = 56, idx = 0;
     bool posSegment = true;
 
-    while (entry[idx] != '[' && idx < entry.size()) {
+    while (entry[idx] != '<' && idx < entry.size()) {
         char c = entry[idx];
 
         if (c == ' ') posSegment = false;
@@ -60,15 +60,14 @@ DataEntry::DataEntry(const std::string &entry) {
             stm = WHITE;
         idx++;
     }
-
+    std::string evalStr;
+    for (idx++; entry[idx] != '>' && idx < entry.size(); idx++) {
+        evalStr += entry[idx];
+    }
     idx++;
-    float recordedEval = float(std::stoi(entry.substr(idx + 5, entry.size() - idx - 4)));
+    eval = sigmoid(std::stoi(evalStr) / EVAL_SCALE);
 
-    wdl = entry[idx] == '1' ? 1 : (entry[idx + 2] == '5' ? 0.5f : 0.0f);
-    eval = sigmoid(recordedEval);
-
-    expected = EVAL_INFLUENCE * eval + (1 - EVAL_INFLUENCE) * wdl;
-    if (stm == BLACK) expected = 1.0f - expected;
+    wdl = (entry[idx] == '-') ? 0.0f : (entry[idx] == '0' ? 0.5f : 1.0f);
 }
 
 Dataset::Dataset(const std::string &fileName) {

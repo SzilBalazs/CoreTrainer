@@ -18,8 +18,7 @@ constexpr int ITERATIONS_PER_CHECKPOINT = 200;
 constexpr int THREAD_COUNT = 4;
 
 constexpr float EVAL_SCALE = 400;
-constexpr float EVAL_SCALE_INVERSE = 1 / EVAL_SCALE;
-constexpr float QUANT_SCALE = 64;
+constexpr float QUANT_SCALE = 255;
 
 constexpr unsigned int L_0_SIZE = 2 * 6 * 64;
 constexpr unsigned int L_1_SIZE = 256;
@@ -47,29 +46,22 @@ constexpr float ReLUDerivative(float in) {
     return 0 < in;
 }
 
-constexpr float clippedReLU(float in) {
-    return std::clamp(in, 0.0f, 64.0f);
-}
-
-constexpr float clippedReLUDerivative(float in) {
-    return 0.0f < in && in < 64.0f;
-}
-
 constexpr float sigmoid(float in) {
-    return 1.0f / (1.0f + std::exp(-in * EVAL_SCALE_INVERSE));
+    return 1.0f / (1.0f + std::exp(-in));
 }
 
 constexpr float sigmoidDerivative(float in) {
     float x = sigmoid(in);
-    return x * (1 - x) * EVAL_SCALE_INVERSE;
+    return x * (1 - x);
 }
 
-constexpr float error(float output, float expected) {
-    return (output - expected) * (output - expected);
+constexpr float error(float output, float wdl, float eval) {
+    return EVAL_INFLUENCE * (output - eval) * (output - eval) +
+           (1 - EVAL_INFLUENCE) * (output - wdl) * (output - wdl);
 }
 
-constexpr float errorDerivative(float output, float expected) {
-    return 2 * (output - expected);
+constexpr float errorDerivative(float output, float wdl, float eval) {
+    return EVAL_INFLUENCE * 2 * (output - eval) + (1 - EVAL_INFLUENCE) * 2 * (output - wdl);
 }
 
 #endif //CORETRAINER_SRC_CONSTANTS_H_

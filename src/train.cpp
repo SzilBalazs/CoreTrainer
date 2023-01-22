@@ -30,12 +30,12 @@ void processBatch(Model &model, int threadId) {
         DataEntry &entry = entries[batchIdx];
 
         float output = sigmoid(model.forward(entry, hiddenLayer));
-        errors[threadId] += error(output, entry.expected);
+        errors[threadId] += error(output, entry.wdl, entry.eval);
 
-        float outputLoss = sigmoidDerivative(output) * errorDerivative(output, entry.expected);
+        float outputLoss = sigmoidDerivative(output) * errorDerivative(output, entry.wdl, entry.eval);
 
         for (unsigned int idx = 0; idx < 2 * L_1_SIZE; idx++) {
-            hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * clippedReLUDerivative(hiddenLayer[idx]);
+            hiddenLayerLoss[idx] = outputLoss * model.L_1.getWeight(idx, 0) * ReLUDerivative(hiddenLayer[idx]);
         }
 
         grad.L_1_BIAS_GRADIENT += outputLoss;
@@ -162,7 +162,7 @@ void train(const std::string &networkName, const std::string &trainPath, const s
         model.exportToFile(f2);
         fclose(f2);
 
-        if (epoch == 30) {
+        if (epoch == 20) {
             std::cout << "LR reduced!" << LR << " -> " << LR / 10 << std::endl;
             LR /= 10;
         }
