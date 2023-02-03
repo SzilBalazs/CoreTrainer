@@ -7,16 +7,25 @@
 
 template<unsigned int IN, unsigned int OUT>
 struct LinearLayer {
-    alignas(64) float biases[OUT] = {0};
-    alignas(64) float weights[IN * OUT] = {0};
+    alignas(64) float *biases;
+    alignas(64) float *weights;
 
     LinearLayer() {
+
+        biases = new float[OUT];
+        weights = new float[IN * OUT];
+
         std::random_device rd;
         std::mt19937 rng(rd());
         std::uniform_real_distribution<float> dist(0, 0.1);
         for (unsigned int idx = 0; idx < IN * OUT; idx++) {
             weights[idx] = dist(rng);
         }
+    }
+
+    ~LinearLayer() {
+        delete[] biases;
+        delete[] weights;
     }
 
     explicit inline LinearLayer(FILE *f) {
@@ -38,7 +47,7 @@ struct LinearLayer {
     }
 
     inline void forward(float *inputLayer, float *outputLayer) {
-        memcpy(outputLayer, biases, sizeof(biases));
+        memcpy(outputLayer, biases, OUT * sizeof(float));
 
         for (unsigned int i = 0; i < IN; i++) {
             for (unsigned int j = 0; j < OUT; j++) {
@@ -48,7 +57,7 @@ struct LinearLayer {
     }
 
     inline void forward(const std::vector<unsigned int> &featureIndexes, float *outputLayer) {
-        memcpy(outputLayer, biases, sizeof(biases));
+        memcpy(outputLayer, biases, OUT * sizeof(float));
 
         for (unsigned int i : featureIndexes) {
             for (unsigned int j = 0; j < OUT; j++) {

@@ -143,7 +143,6 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                 std::ofstream data("loss.txt", std::ios::app);
                 data << iteration << " " << averageError << "\n";
                 data.close();
-                system("python3 graph.py &");
             }
 
             if (loadingThread.joinable())

@@ -31,25 +31,29 @@ struct Model {
         float maxWeight1 = 0.0;
         float maxBias1 = 0.0;
 
-        for (float w : L_0.weights) {
+        for (unsigned int i = 0; i < L_0_SIZE * L_1_SIZE; i++) {
+            float w = L_0.weights[i];
             maxWeight0 = std::max(maxWeight0, w);
             int16_t a = std::round(w * QUANT_SCALE);
             fwrite(&a, sizeof(int16_t), 1, f);
         }
 
-        for (float w : L_0.biases) {
+        for (unsigned int i = 0; i < L_1_SIZE; i++) {
+            float w = L_0.biases[i];
             maxBias0 = std::max(maxBias0, w);
             int16_t a = std::round(w * QUANT_SCALE);
             fwrite(&a, sizeof(int16_t), 1, f);
         }
 
-        for (float w : L_1.weights) {
+        for (unsigned int i = 0; i < 2 * L_1_SIZE * L_2_SIZE; i++) {
+            float w = L_1.weights[i];
             maxWeight1 = std::max(maxWeight1, w);
             int16_t a = std::round(w * QUANT_SCALE);
             fwrite(&a, sizeof(int16_t), 1, f);
         }
 
-        for (float w : L_1.biases) {
+        for (unsigned int i = 0; i < L_2_SIZE; i++) {
+            float w = L_1.biases[i];
             maxBias1 = std::max(maxBias1, w);
             int16_t a = std::round(w * QUANT_SCALE * QUANT_SCALE);
             fwrite(&a, sizeof(int16_t), 1, f);

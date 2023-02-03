@@ -6,7 +6,7 @@
 
 extern float LR;
 constexpr unsigned int BATCH_SIZE = 16384;
-constexpr float EVAL_INFLUENCE = 0.9;
+constexpr float EVAL_INFLUENCE = 0.5;
 constexpr unsigned int EPOCHS = 500;
 
 constexpr float BETA1 = 0.9;
@@ -22,7 +22,7 @@ constexpr float QUANT_SCALE = 255;
 
 // king buckets * colors * piece types * squares
 constexpr unsigned int L_0_SIZE = 4 * 2 * 6 * 64;
-constexpr unsigned int L_1_SIZE = 256;
+constexpr unsigned int L_1_SIZE = 384;
 constexpr unsigned int L_2_SIZE = 1;
 
 // clang-format off
@@ -35,8 +35,17 @@ constexpr int KING_BUCKET[64]{
         2, 2, 2, 2, 3, 3, 3, 3,
         2, 2, 2, 2, 3, 3, 3, 3,
         2, 2, 2, 2, 3, 3, 3, 3,
-
 };
+/*constexpr int KING_BUCKET[64]{
+         0,  1,  2,  3,  4,  5,  6,  7,
+         8,  9, 10, 11, 12, 13, 14, 15,
+        16, 16, 17, 17, 18, 18, 19, 19,
+        16, 16, 17, 17, 18, 18, 19, 19,
+        20, 20, 20, 20, 21, 21, 21, 21,
+        20, 20, 20, 20, 21, 21, 21, 21,
+        22, 22, 22, 22, 23, 23, 23, 23,
+        22, 22, 22, 22, 23, 23, 23, 23,
+};*/
 // clang-format on
 
 enum Color {
