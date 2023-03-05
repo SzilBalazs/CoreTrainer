@@ -136,8 +136,7 @@ void train(const std::string &networkName, const std::string &trainPath, const s
                 std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
                 long secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now - begin).count();
                 long positionsPerSecond = iteration * BATCH_SIZE / (secondsSinceEpoch + 1);
-                std::cout << "                                               \r" << std::flush;
-                std::cout << "Epoch " << epoch << " - Iteration " << iteration << " - Error " << averageError << " - Elapsed time " << secondsSinceEpoch << "s - Position/second " << positionsPerSecond << "\r" << std::flush;
+                std::cout << "Epoch " << epoch << " - Iteration " << iteration << " - Error " << averageError << " - Elapsed time " << secondsSinceEpoch << "s - Position/second " << positionsPerSecond << std::endl;
                 totalError = 0;
 
                 std::ofstream data("loss.txt", std::ios::app);

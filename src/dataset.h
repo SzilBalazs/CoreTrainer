@@ -1,5 +1,4 @@
-#ifndef CORETRAINER_SRC_DATASET_H_
-#define CORETRAINER_SRC_DATASET_H_
+#pragma once
 
 #include "constants.h"
 
@@ -39,5 +38,3 @@ struct Dataset {
         file.close();
     }
 };
-
-#endif //CORETRAINER_SRC_DATASET_H_

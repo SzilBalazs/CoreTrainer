@@ -1,19 +1,18 @@
-#ifndef CORETRAINER_SRC_CONSTANTS_H_
-#define CORETRAINER_SRC_CONSTANTS_H_
+#pragma once
 
 #include <algorithm>
 #include <complex>
 
 extern float LR;
 constexpr unsigned int BATCH_SIZE = 16384;
-constexpr float EVAL_INFLUENCE = 0.5;
+constexpr float EVAL_INFLUENCE = 0.9;
 constexpr unsigned int EPOCHS = 500;
 
 constexpr float BETA1 = 0.9;
 constexpr float BETA2 = 0.999;
 constexpr float EPSILON = 1e-8;
 
-constexpr int ITERATIONS_PER_CHECKPOINT = 200;
+constexpr int ITERATIONS_PER_CHECKPOINT = 1000;
 
 constexpr int THREAD_COUNT = 4;
 
@@ -36,16 +35,6 @@ constexpr int KING_BUCKET[64]{
         2, 2, 2, 2, 3, 3, 3, 3,
         2, 2, 2, 2, 3, 3, 3, 3,
 };
-/*constexpr int KING_BUCKET[64]{
-         0,  1,  2,  3,  4,  5,  6,  7,
-         8,  9, 10, 11, 12, 13, 14, 15,
-        16, 16, 17, 17, 18, 18, 19, 19,
-        16, 16, 17, 17, 18, 18, 19, 19,
-        20, 20, 20, 20, 21, 21, 21, 21,
-        20, 20, 20, 20, 21, 21, 21, 21,
-        22, 22, 22, 22, 23, 23, 23, 23,
-        22, 22, 22, 22, 23, 23, 23, 23,
-};*/
 // clang-format on
 
 enum Color {
@@ -87,5 +76,3 @@ constexpr float error(float output, float wdl, float eval) {
 constexpr float errorDerivative(float output, float wdl, float eval) {
     return EVAL_INFLUENCE * 2 * (output - eval) + (1 - EVAL_INFLUENCE) * 2 * (output - wdl);
 }
-
-#endif //CORETRAINER_SRC_CONSTANTS_H_

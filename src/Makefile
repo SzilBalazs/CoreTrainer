@@ -1,10 +1,10 @@
 CXX = g++
-TARGET_FLAGS = -static -static-libgcc -static-libstdc++
+TARGET_FLAGS =
 OBJECT_DIR = objects
 SOURCES := $(wildcard *.cpp)
 OBJECTS := $(patsubst %.cpp, $(OBJECT_DIR)/%.o, $(SOURCES))
 
-CXXFLAGS = -std=c++20 -O3 -ffast-math -funroll-loops -flto -pthread -Wall -Wno-unused-result -march=native
+CXXFLAGS = -g -std=c++20 -O3 -ffast-math -funroll-loops -flto -pthread -Wall -Wno-unused-result -march=native -fsanitize=undefined
 EXE = CoreTrainer
 
 default: $(EXE)

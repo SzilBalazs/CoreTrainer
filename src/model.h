@@ -1,5 +1,4 @@
-#ifndef CORETRAINER_SRC_MODEL_H_
-#define CORETRAINER_SRC_MODEL_H_
+#pragma once
 
 #include <cmath>
 
@@ -81,5 +80,3 @@ struct Model {
         return output;
     }
 };
-
-#endif //CORETRAINER_SRC_MODEL_H_

@@ -1,5 +1,4 @@
-#ifndef CORETRAINER_SRC_ADAM_H_
-#define CORETRAINER_SRC_ADAM_H_
+#pragma once
 
 #include "gradient.h"
 #include "model.h"
@@ -56,5 +55,3 @@ struct Adam {
         }
     }
 };
-
-#endif //CORETRAINER_SRC_ADAM_H_

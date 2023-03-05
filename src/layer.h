@@ -1,5 +1,4 @@
-#ifndef CORETRAINER_SRC_LAYER_H_
-#define CORETRAINER_SRC_LAYER_H_
+#pragma once
 
 #include <cstring>
 #include <immintrin.h>
@@ -7,13 +6,17 @@
 
 template<unsigned int IN, unsigned int OUT>
 struct LinearLayer {
-    alignas(64) float *biases;
-    alignas(64) float *weights;
+    std::unique_ptr<float[]> biases;
+    std::unique_ptr<float[]> weights;
 
     LinearLayer() {
 
-        biases = new float[OUT];
-        weights = new float[IN * OUT];
+        if constexpr ((OUT * sizeof(float)) % 64 == 0)
+            biases = std::unique_ptr<float[]>(static_cast<float *>(aligned_alloc(64, OUT * sizeof(float))));
+        else
+            biases = std::unique_ptr<float[]>(static_cast<float *>(aligned_alloc(4, OUT * sizeof(float))));
+
+        weights = std::unique_ptr<float[]>(static_cast<float *>(aligned_alloc(64, IN * OUT * sizeof(float))));
 
         std::random_device rd;
         std::mt19937 rng(rd());
@@ -21,11 +24,6 @@ struct LinearLayer {
         for (unsigned int idx = 0; idx < IN * OUT; idx++) {
             weights[idx] = dist(rng);
         }
-    }
-
-    ~LinearLayer() {
-        delete[] biases;
-        delete[] weights;
     }
 
     explicit inline LinearLayer(FILE *f) {
@@ -37,17 +35,17 @@ struct LinearLayer {
     }
 
     inline void loadFromFile(FILE *f) {
-        fread(weights, sizeof(float), IN * OUT, f);
-        fread(biases, sizeof(float), OUT, f);
+        fread(weights.get(), sizeof(float), IN * OUT, f);
+        fread(biases.get(), sizeof(float), OUT, f);
     }
 
     inline void writeToFile(FILE *f) {
-        fwrite(weights, sizeof(float), IN * OUT, f);
-        fwrite(biases, sizeof(float), OUT, f);
+        fwrite(weights.get(), sizeof(float), IN * OUT, f);
+        fwrite(biases.get(), sizeof(float), OUT, f);
     }
 
     inline void forward(float *inputLayer, float *outputLayer) {
-        memcpy(outputLayer, biases, OUT * sizeof(float));
+        memcpy(outputLayer, biases.get(), OUT * sizeof(float));
 
         for (unsigned int i = 0; i < IN; i++) {
             for (unsigned int j = 0; j < OUT; j++) {
@@ -57,7 +55,7 @@ struct LinearLayer {
     }
 
     inline void forward(const std::vector<unsigned int> &featureIndexes, float *outputLayer) {
-        memcpy(outputLayer, biases, OUT * sizeof(float));
+        memcpy(outputLayer, biases.get(), OUT * sizeof(float));
 
         for (unsigned int i : featureIndexes) {
             for (unsigned int j = 0; j < OUT; j++) {
@@ -66,5 +64,3 @@ struct LinearLayer {
         }
     }
 };
-
-#endif //CORETRAINER_SRC_LAYER_H_
